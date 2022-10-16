@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Lab Assignment 1: Naive Bayes Classifier
 
-### *Name1 Surname1, Name2 Surname2, Name3 Surname3*
+### *Roman Mutel, Liubomyr Mokrytskyi, Dmytro Mykytenko*
 
 ## Introduction
 
@@ -47,29 +47,29 @@ There are 5 datasets uploaded on the cms.
 To determine your variant, take your team number from the list of teams
 on cms and take *mod 5* - this is the number of your data set.
 
--   **0 - authors** This data set consists of citations of three famous
+-   0 - authors This data set consists of citations of three famous
     writers: Edgar Alan Poe, Mary Wollstonecraft Shelley and HP
     Lovecraft. The task with this data set is to classify a piece of
     text with the author who was more likely to write it.
 
--   **1 - discrimination** This data set consists of tweets that have
+-   1 - discrimination This data set consists of tweets that have
     discriminatory (sexism or racism) messages or of tweets that are of
     neutral mood. The task is to determine whether a given tweet has
     discriminatory mood or does not.
 
--   **2 - fake news** This data set contains data of American news: a
+-   2 - fake news This data set contains data of American news: a
     headline and an abstract of the article. Each piece of news is
     classified as fake or credible. The task is to classify the news
     from test.csv as credible or fake.
 
--   **3 - sentiment** All the text messages contained in this data set
-    are labeled with three sentiments: positive, neutral or negative.
-    The task is to classify some text message as the one of positive
-    mood, negative or neutral.
+-   **3 - sentiment All the text messages contained in this data set are
+    labeled with three sentiments: positive, neutral or negative. The
+    task is to classify some text message as the one of positive mood,
+    negative or neutral.**
 
--   **4 - spam** This last data set contains SMS messages classified as
-    spam or non-spam (ham in the data set). The task is to determine
-    whether a given message is spam or non-spam.
+-   4 - spam This last data set contains SMS messages classified as spam
+    or non-spam (ham in the data set). The task is to determine whether
+    a given message is spam or non-spam.
 
 Each data set consists of two files: *train.csv* and *test.csv*. The
 first one you will need find the probabilities distributions for each of
@@ -102,9 +102,9 @@ library(ggplot2)
 
 -   shortly summarize your work
 
--   do not forget to submit both the (compiled) Rmd source file and the .html
-    output
-    
+-   do not forget to submit both the (compiled) Rmd source file and the
+    .html output
+
 ### Data pre-processing
 
 -   Read the *.csv* data files.
@@ -129,12 +129,12 @@ library(ggplot2)
 
 ```{r}
 list.files(getwd())
-list.files("data/0-authors")
+list.files("3-sentiment")
 ```
 
 ```{r}
-test_path <- "data/0-authors/test.csv"
-train_path <- "data/0-authors/train.csv"
+test_path <- "3-sentiment/test.csv"
+train_path <- "3-sentiment/train.csv"
 
 stop_words <- read_file("stop_words.txt")
 # https://stackoverflow.com/questions/27195912/why-does-strsplit-return-a-list
@@ -143,8 +143,8 @@ splitted_stop_words <- splitted_stop_words[[1]]
 ```
 
 ```{r}
-train <-  read.csv(file = train_path, stringsAsFactors = FALSE)
-test <-  read.csv(file = test_path, stringsAsFactors = FALSE)
+train <- read.csv(file = train_path, stringsAsFactors = FALSE)
+test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 ```
 
 ```{r}
@@ -155,18 +155,34 @@ tidy_text <- unnest_tokens(train, 'splitted', 'text', token="words") %>%
 tidy_text %>% count(splitted,sort=TRUE)
 ```
 
-### Data visualization
+### Visualization of the Most Common Words with Negative Sentiment
 
-Each time you work with some data, you need to understand it before you
-start processing it. R has very powerful tools to make nice plots and
-visualization. Show what are the most common words for negative and
-positive examples as a histogram, word cloud etc. Be creative!
+Below is bar plot for words, which are longer than 3 symbols and
+appeared more than 10 times in negative sentiment statements:
+
+```{r}
+negative <- tidy_text %>% filter(sentiment=="negative" & nchar(splitted) > 3) %>% count(splitted,sort=TRUE) %>% filter(n > 10)
+negative <- mutate(negative, splitted = reorder(splitted, 1/n))
+# negative
+ggplot(negative, aes(splitted, n)) + geom_col()
+```
+
+And a similar plot for 3+-symbols-long words which appeared in positive
+sentiment statements more than 100 times (there is more positive
+statements, than negative, so the threshold of appearances is larger
+than for negative words)
+
+```{r}
+positive <- tidy_text %>% filter(sentiment=="positive" & nchar(splitted) > 3) %>% count(splitted,sort=TRUE) %>% filter(n > 100)
+positive <- mutate(positive, splitted = reorder(splitted, 1/n))
+# positive
+ggplot(positive, aes(splitted, n)) +geom_col()
+```
 
 ## Classifier implementation
 
 ```{r}
 naiveBayes <- setRefClass("naiveBayes",
-                          
        # here it would be wise to have some vars to store intermediate result
        # frequency dict etc. Though pay attention to bag of wards! 
        fields = list(),
@@ -201,6 +217,7 @@ model$fit()
 ```
 
 ## Measure effectiveness of your classifier
+
 -   Note that accuracy is not always a good metric for your classifier.
     Look at precision and recall curves, F1 score metric.
 -   Visualize them.
