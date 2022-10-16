@@ -167,10 +167,10 @@ negative <- mutate(negative, splitted = reorder(splitted, 1/n))
 ggplot(negative, aes(splitted, n)) + geom_col()
 ```
 
-And a similar plot for 3+-symbols-long words which appeared in positive
-sentiment statements more than 100 times (there is more positive
-statements, than negative, so the threshold of appearances is larger
-than for negative words)
+...and a similar plot for 3+-symbols-long words which appeared in
+positive sentiment statements more than 100 times (there is more
+positive statements, than negative, so the threshold of appearances is
+larger than for negative words)
 
 ```{r}
 positive <- tidy_text %>% filter(sentiment=="positive" & nchar(splitted) > 3) %>% count(splitted,sort=TRUE) %>% filter(n > 100)
