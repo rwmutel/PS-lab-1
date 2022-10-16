@@ -140,6 +140,7 @@ stop_words <- read_file("stop_words.txt")
 # https://stackoverflow.com/questions/27195912/why-does-strsplit-return-a-list
 splitted_stop_words <- strsplit(stop_words, split='\n')
 splitted_stop_words <- splitted_stop_words[[1]]
+stop_words = splitted_stop_words
 ```
 
 ```{r}
@@ -151,29 +152,30 @@ test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 # note the power functional features of R bring us! 
 tidy_text <- unnest_tokens(train, 'splitted', 'text', token="words") %>%
              filter(!splitted %in% stop_words)
-
 tidy_text %>% count(splitted,sort=TRUE)
 ```
 
-### Visualization of the Most Common Words with Negative Sentiment
+### Data Visualization
 
 Below is bar plot for words, which are longer than 3 symbols and
-appeared more than 10 times in negative sentiment statements:
+appeared more than 10 times in **negative** sentiment statements:
 
 ```{r}
-negative <- tidy_text %>% filter(sentiment=="negative" & nchar(splitted) > 3) %>% count(splitted,sort=TRUE) %>% filter(n > 10)
+negative <- tidy_text %>% filter(sentiment=="negative") %>% count(splitted,sort=TRUE) %>% filter(n > 15)
+# sorting our dataframe
 negative <- mutate(negative, splitted = reorder(splitted, 1/n))
 # negative
 ggplot(negative, aes(splitted, n)) + geom_col()
 ```
 
 ...and a similar plot for 3+-symbols-long words which appeared in
-positive sentiment statements more than 100 times (there is more
+**positive** sentiment statements more than 100 times (there is more
 positive statements, than negative, so the threshold of appearances is
 larger than for negative words)
 
 ```{r}
-positive <- tidy_text %>% filter(sentiment=="positive" & nchar(splitted) > 3) %>% count(splitted,sort=TRUE) %>% filter(n > 100)
+positive <- tidy_text %>% filter(sentiment=="positive") %>% count(splitted,sort=TRUE) %>% filter(n > 100)
+# sorting our dataframe
 positive <- mutate(positive, splitted = reorder(splitted, 1/n))
 # positive
 ggplot(positive, aes(splitted, n)) +geom_col()
@@ -184,17 +186,23 @@ ggplot(positive, aes(splitted, n)) +geom_col()
 ```{r}
 naiveBayes <- setRefClass("naiveBayes",
        # here it would be wise to have some vars to store intermediate result
-       # frequency dict etc. Though pay attention to bag of wards! 
-       fields = list(),
+       # frequency dict etc. Though pay attention to bag of words!
+       fields = c("fdict", "positive", "neutral", "negative"),
        methods = list(
-                    # prepare your training data as X - bag of words for each of your
-                    # messages and corresponding label for the message encoded as 0 or 1 
-                    # (binary classification task)
+        # prepare your training data as X - bag of words for each of your
+        # messages and corresponding label for the message encoded as 0 or 1 
+        # (binary classification task)
                     fit = function(X, y)
                     {
-                         # TODO
+                         stop_word <- strsplit(read_file("stop_words.txt"), split='\n')[[1]]
+                         df <- data.frame(text=X,sentiment=y)
+                         tidy_text <- unnest_tokens(df, 'token', 'text', token="words") %>% filter(!token %in% stop_words)
+                         #print(str(tidy_text))
+                         positive <<- tidy_text %>% filter(sentiment=="positive")  %>% count(token)
+                         neutral <<- tidy_text %>% filter(sentiment=="neutral") %>% count(token)
+                         negative <<- tidy_text %>% filter(sentiment=="negative")  %>% count(token)
+                         fdict <<- merge.data.frame()
                     },
-                    
                     # return prediction for a single message 
                     predict = function(message)
                     {
@@ -211,9 +219,15 @@ naiveBayes <- setRefClass("naiveBayes",
                          # TODO
                     }
 ))
+test_path <- "3-sentiment/test.csv"
+train_path <- "3-sentiment/train.csv"
+train <- read.csv(file = train_path, stringsAsFactors = FALSE)
+test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 
 model = naiveBayes()
-model$fit()
+model$fit(train$text, train$sentiment)
+model$positive[model$positive$token=="ukraine",]$n
+sum(model$neutral[model$neutral$token=="ukraine",]$n, model$positive[model$positive$token=="ukraine",]$n, model$negative[model$negative$token=="ukraine",]$n)
 ```
 
 ## Measure effectiveness of your classifier
