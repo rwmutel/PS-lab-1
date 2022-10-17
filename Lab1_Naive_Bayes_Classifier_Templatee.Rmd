@@ -196,7 +196,6 @@ naiveBayes <- setRefClass("naiveBayes",
                     {
                          stop_word <- strsplit(read_file("stop_words.txt"), split='\n')[[1]]
                          prob_sentiments <- count(tidy_text, sentiment)
-                         print(prob_sentiments)
                          p_neg = prob_sentiments[1,]$n/sum(prob_sentiments$n)
                          p_neu = prob_sentiments[2,]$n/sum(prob_sentiments$n)
                          p_pos = prob_sentiments[3,]$n/sum(prob_sentiments$n)
@@ -214,10 +213,30 @@ naiveBayes <- setRefClass("naiveBayes",
                          fdict$prob_positive <<- seq(0,0, length=length(fdict$word))
                          fdict$prob_neutral <<- seq(0,0, length=length(fdict$word))
                          fdict$prob_negative <<- seq(0,0, length=length(fdict$word))
-                         for(i in 1:20){
-                           fdict[i,]$prob_positive <<- (positive[positive$token==fdict[i,"word"],]$n)/ fdict[i,]$total
-                           fdict[i,]$prob_neutral <<- (neutral[neutral$token==fdict[i,"word"],]$n)/ fdict[i,]$total
-                           fdict[i,]$prob_negative <<- (negative[negative$token==fdict[i,"word"],]$n)/ fdict[i,]$total
+                         for(i in 1:nrow(fdict)){
+                           i_pos = positive[positive$token==fdict[i,"word"],]$n
+                           i_neu = neutral[neutral$token==fdict[i,"word"],]$n
+                           i_neg = negative[negative$token==fdict[i,"word"],]$n
+                           i_total = fdict[i, "total"]
+
+                           if (length(i_pos) == 0){
+                              fdict[i,]$prob_positive <<- 1 / i_total
+                           }
+                           else{
+                              fdict[i,]$prob_positive <<- i_pos / i_total
+                           }
+                           if (length(i_neu) == 0){
+                              fdict[i,]$prob_neutral <<- 1 / i_total
+                           }
+                           else{
+                              fdict[i,]$prob_neutral <<- i_neu / i_total
+                           }
+                           if (length(i_neg) == 0){
+                              fdict[i,]$prob_negative <<- 1 / i_total
+                           }
+                           else{
+                              fdict[i,]$prob_negative <<- i_neg / i_total
+                           }
                            #print(positive[positive$token==fdict[i,"word"],])
                            
                          }
