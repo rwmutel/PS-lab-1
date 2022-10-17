@@ -197,16 +197,20 @@ naiveBayes <- setRefClass("naiveBayes",
                          stop_word <- strsplit(read_file("stop_words.txt"), split='\n')[[1]]
                          df <- data.frame(text=X,sentiment=y)
                          tidy_text <- unnest_tokens(df, 'token', 'text', token="words") %>% filter(!token %in% stop_words)
-                         #print(str(tidy_text))
+                         print(str(tidy_text))
                          fdict <<- data.frame(
-                           word = tidy_text$token
+                           word = count(tidy_text, token, sort=TRUE)$token,
+                           total = count(tidy_text, token, sort=TRUE)$n
                          )
-                         for(i in 1:nrow(fdict)) {
-                            fdict[i,][positive] =   
-                         }
                          positive <<- tidy_text %>% filter(sentiment=="positive")  %>% count(token)
                          neutral <<- tidy_text %>% filter(sentiment=="neutral") %>% count(token)
                          negative <<- tidy_text %>% filter(sentiment=="negative")  %>% count(token)
+                         fdict$prob_positive <<- seq(0,0, length=length(fdict$word))
+                         for(i in 1:5){
+                           fdict[i,]$prob_positive <<- positive[positive$token==fdict[i,"word"],]$n
+                           #print(positive[positive$token==fdict[i,]$word])
+                           print(positive[positive$token==fdict[i,"word"],])
+                         }
                     },
                     # return prediction for a single message 
                     predict = function(message)
@@ -231,8 +235,9 @@ test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 
 model = naiveBayes()
 model$fit(train$text, train$sentiment)
-model$positive[model$positive$token=="ukraine",]$n
-sum(model$neutral[model$neutral$token=="ukraine",]$n, model$positive[model$positive$token=="ukraine",]$n, model$negative[model$negative$token=="ukraine",]$n)
+model$fdict
+#model$positive[model$positive$token=="ukraine",]$n
+#sum(model$neutral[model$neutral$token=="ukraine",]$n, model$positive[model$positive$token=="ukraine",]$n, model$negative[model$negative$token=="ukraine",]$n)
 ```
 
 ## Measure effectiveness of your classifier
