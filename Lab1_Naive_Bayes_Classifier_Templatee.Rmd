@@ -198,10 +198,15 @@ naiveBayes <- setRefClass("naiveBayes",
                          df <- data.frame(text=X,sentiment=y)
                          tidy_text <- unnest_tokens(df, 'token', 'text', token="words") %>% filter(!token %in% stop_words)
                          #print(str(tidy_text))
+                         fdict <<- data.frame(
+                           word = tidy_text$token
+                         )
+                         for(i in 1:nrow(fdict)) {
+                            fdict[i,][positive] =   
+                         }
                          positive <<- tidy_text %>% filter(sentiment=="positive")  %>% count(token)
                          neutral <<- tidy_text %>% filter(sentiment=="neutral") %>% count(token)
                          negative <<- tidy_text %>% filter(sentiment=="negative")  %>% count(token)
-                         fdict <<- merge.data.frame()
                     },
                     # return prediction for a single message 
                     predict = function(message)
