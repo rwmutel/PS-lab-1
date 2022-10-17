@@ -161,7 +161,7 @@ Below is bar plot for words, which are longer than 3 symbols and
 appeared more than 10 times in **negative** sentiment statements:
 
 ```{r}
-negative <- tidy_text %>% filter(sentiment=="negative") %>% count(splitted,sort=TRUE) %>% filter(n > 15)
+negative <- tidy_text %>% filter(sentiment=="negative") %>% count(splitted,sort=TRUE) %>% filter(n > 15) %>% filter(nchar(splitted) > 3)
 # sorting our dataframe
 negative <- mutate(negative, splitted = reorder(splitted, 1/n))
 # negative
@@ -174,7 +174,7 @@ positive statements, than negative, so the threshold of appearances is
 larger than for negative words)
 
 ```{r}
-positive <- tidy_text %>% filter(sentiment=="positive") %>% count(splitted,sort=TRUE) %>% filter(n > 100)
+positive <- tidy_text %>% filter(sentiment=="positive") %>% count(splitted,sort=TRUE) %>% filter(n > 100) %>% filter(nchar(splitted) > 3)
 # sorting our dataframe
 positive <- mutate(positive, splitted = reorder(splitted, 1/n))
 # positive
