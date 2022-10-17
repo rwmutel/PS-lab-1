@@ -194,26 +194,30 @@ naiveBayes <- setRefClass("naiveBayes",
         # (binary classification task)
                     fit = function(X, y)
                     {
+                         df <- data.frame(text=X,sentiment=y)
+                         tidy_text <- unnest_tokens(df, 'token', 'text', token="words") %>% filter(!token %in% stop_words)
                          stop_word <- strsplit(read_file("stop_words.txt"), split='\n')[[1]]
+                         stop_words = gsub("[\r]", "", stop_words)
                          prob_sentiments <- count(tidy_text, sentiment)
                          p_neg = prob_sentiments[1,]$n/sum(prob_sentiments$n)
                          p_neu = prob_sentiments[2,]$n/sum(prob_sentiments$n)
                          p_pos = prob_sentiments[3,]$n/sum(prob_sentiments$n)
-                         
-                         df <- data.frame(text=X,sentiment=y)
-                         tidy_text <- unnest_tokens(df, 'token', 'text', token="words") %>% filter(!token %in% stop_words)
                          
                          fdict <<- data.frame(
                            word = count(tidy_text, token, sort=TRUE)$token,
                            total = count(tidy_text, token, sort=TRUE)$n
                          )
                          positive <- tidy_text %>% filter(sentiment=="positive")  %>% count(token)
+                         total_pos = nrow(positive)
                          neutral <- tidy_text %>% filter(sentiment=="neutral") %>% count(token)
+                         total_neu = nrow(neutral)
                          negative <- tidy_text %>% filter(sentiment=="negative")  %>% count(token)
-                         fdict$prob_positive <<- seq(0,0, length=length(fdict$word))
-                         fdict$prob_neutral <<- seq(0,0, length=length(fdict$word))
-                         fdict$prob_negative <<- seq(0,0, length=length(fdict$word))
-                         for(i in 1:nrow(fdict)){
+                         total_neg = nrow(negative)
+                         fdict$prob_pos <<- seq(0,0, length=length(fdict$word))
+                         fdict$prob_neu <<- seq(0,0, length=length(fdict$word))
+                         fdict$prob_neg <<- seq(0,0, length=length(fdict$word))
+
+                         for(i in 1:40){
                            i_pos = positive[positive$token==fdict[i,"word"],]$n
                            i_neu = neutral[neutral$token==fdict[i,"word"],]$n
                            i_neg = negative[negative$token==fdict[i,"word"],]$n
@@ -228,11 +232,11 @@ naiveBayes <- setRefClass("naiveBayes",
                               i_neg <- integer(1)
                            }
                               i_total = i_pos + i_neu + i_neg
-                              fdict[i,]$prob_negative <<- i_neg/ i_total
+                              fdict[i,]$prob_neg <<- i_neg/ total_neg
                            
                               
-                              fdict[i,]$prob_positive <<- i_pos/ i_total
-                              fdict[i,]$prob_neutral <<- i_neu/ i_total
+                              fdict[i,]$prob_pos <<- i_pos/ total_pos
+                              fdict[i,]$prob_neu <<- i_neu/ total_neu
                            #print(positive[positive$token==fdict[i,"word"],])
                          }    
                          
@@ -261,8 +265,6 @@ test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 model = naiveBayes()
 model$fit(train$text, train$sentiment)
 model$fdict
-#model$positive[model$positive$token=="ukraine",]$n
-#sum(model$neutral[model$neutral$token=="ukraine",]$n, model$positive[model$positive$token=="ukraine",]$n, model$negative[model$negative$token=="ukraine",]$n)
 ```
 
 ## Measure effectiveness of your classifier
