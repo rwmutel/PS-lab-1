@@ -138,9 +138,9 @@ train_path <- "3-sentiment/train.csv"
 
 stop_words <- read_file("stop_words.txt")
 # https://stackoverflow.com/questions/27195912/why-does-strsplit-return-a-list
-splitted_stop_words <- strsplit(stop_words, split='\n')
+splitted_stop_words <- strsplit(stop_words, split=c('\n'))
 splitted_stop_words <- splitted_stop_words[[1]]
-stop_words = splitted_stop_words
+stop_words = gsub("[\r]", "", splitted_stop_words)
 ```
 
 ```{r}
