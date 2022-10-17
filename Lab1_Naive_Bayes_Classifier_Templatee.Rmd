@@ -185,27 +185,22 @@ ggplot(positive, aes(splitted, n)) +geom_col()
 
 ```{r}
 naiveBayes <- setRefClass("naiveBayes",
-       # here it would be wise to have some vars to store intermediate result
-       # frequency dict etc. Though pay attention to bag of words!
        fields = c("fdict"),
        methods = list(
-        # prepare your training data as X - bag of words for each of your
-        # messages and corresponding label for the message encoded as 0 or 1 
-        # (binary classification task)
                     fit = function(X, y)
                     {
                          df <- data.frame(text=X,sentiment=y)
-                         tidy_text <- unnest_tokens(df, 'token', 'text', token="words") %>% filter(!token %in% stop_words)
-                         stop_word <- strsplit(read_file("stop_words.txt"), split='\n')[[1]]
+                         stop_words <- strsplit(read_file("stop_words.txt"), split='\n')[[1]]
                          stop_words = gsub("[\r]", "", stop_words)
+                         tidy_text <- unnest_tokens(df, 'token', 'text', token="words") %>% filter(!token %in% stop_words)
                          prob_sentiments <- count(tidy_text, sentiment)
-                         p_neg = prob_sentiments[1,]$n/sum(prob_sentiments$n)
-                         p_neu = prob_sentiments[2,]$n/sum(prob_sentiments$n)
-                         p_pos = prob_sentiments[3,]$n/sum(prob_sentiments$n)
+                         prob_neg = prob_sentiments[1,]$n/sum(prob_sentiments$n)
+                         prob_neu = prob_sentiments[2,]$n/sum(prob_sentiments$n)
+                         prob_pos = prob_sentiments[3,]$n/sum(prob_sentiments$n)
                          
                          fdict <<- data.frame(
-                           word = count(tidy_text, token, sort=TRUE)$token,
-                           total = count(tidy_text, token, sort=TRUE)$n
+                           word = count(tidy_text, token, sort=TRUE)$token
+                           #total = count(tidy_text, token, sort=TRUE)$n
                          )
                          positive <- tidy_text %>% filter(sentiment=="positive")  %>% count(token)
                          total_pos = nrow(positive)
@@ -213,6 +208,8 @@ naiveBayes <- setRefClass("naiveBayes",
                          total_neu = nrow(neutral)
                          negative <- tidy_text %>% filter(sentiment=="negative")  %>% count(token)
                          total_neg = nrow(negative)
+                         total_all = n_distinct(tidy_text$token)
+
                          fdict$prob_pos <<- seq(0,0, length=length(fdict$word))
                          fdict$prob_neu <<- seq(0,0, length=length(fdict$word))
                          fdict$prob_neg <<- seq(0,0, length=length(fdict$word))
@@ -224,20 +221,20 @@ naiveBayes <- setRefClass("naiveBayes",
 
                            if (length(i_pos) == 0){
                               i_pos <- integer(1)
+                              i_pos = 0
                            }
                            if (length(i_neu) == 0){
                               i_neu <- integer(1)
+                              i_neu = 0
                            }
                            if (length(i_neg) == 0){
                               i_neg <- integer(1)
+                              i_neg = 0
                            }
-                              i_total = i_pos + i_neu + i_neg
-                              fdict[i,]$prob_neg <<- i_neg/ total_neg
                            
-                              
-                              fdict[i,]$prob_pos <<- i_pos/ total_pos
-                              fdict[i,]$prob_neu <<- i_neu/ total_neu
-                           #print(positive[positive$token==fdict[i,"word"],])
+                           fdict[i,]$prob_pos <<- (i_pos + 1) / (total_pos + total_all)
+                           fdict[i,]$prob_neu <<- (i_neu + 1) / (total_neu + total_all)
+                           fdict[i,]$prob_neg <<- (i_neg + 1) / (total_neg + total_all)
                          }    
                          
                     },
