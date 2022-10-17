@@ -195,9 +195,15 @@ naiveBayes <- setRefClass("naiveBayes",
                     fit = function(X, y)
                     {
                          stop_word <- strsplit(read_file("stop_words.txt"), split='\n')[[1]]
+                         prob_sentiments <- count(tidy_text, sentiment)
+                         print(prob_sentiments)
+                         p_neg = prob_sentiments[1,]$n/sum(prob_sentiments$n)
+                         p_neu = prob_sentiments[2,]$n/sum(prob_sentiments$n)
+                         p_pos = prob_sentiments[3,]$n/sum(prob_sentiments$n)
+                         
                          df <- data.frame(text=X,sentiment=y)
                          tidy_text <- unnest_tokens(df, 'token', 'text', token="words") %>% filter(!token %in% stop_words)
-                         print(str(tidy_text))
+                         
                          fdict <<- data.frame(
                            word = count(tidy_text, token, sort=TRUE)$token,
                            total = count(tidy_text, token, sort=TRUE)$n
@@ -206,10 +212,14 @@ naiveBayes <- setRefClass("naiveBayes",
                          neutral <<- tidy_text %>% filter(sentiment=="neutral") %>% count(token)
                          negative <<- tidy_text %>% filter(sentiment=="negative")  %>% count(token)
                          fdict$prob_positive <<- seq(0,0, length=length(fdict$word))
-                         for(i in 1:5){
-                           fdict[i,]$prob_positive <<- positive[positive$token==fdict[i,"word"],]$n
-                           #print(positive[positive$token==fdict[i,]$word])
-                           print(positive[positive$token==fdict[i,"word"],])
+                         fdict$prob_neutral <<- seq(0,0, length=length(fdict$word))
+                         fdict$prob_negative <<- seq(0,0, length=length(fdict$word))
+                         for(i in 1:20){
+                           fdict[i,]$prob_positive <<- (positive[positive$token==fdict[i,"word"],]$n)/ fdict[i,]$total
+                           fdict[i,]$prob_neutral <<- (neutral[neutral$token==fdict[i,"word"],]$n)/ fdict[i,]$total
+                           fdict[i,]$prob_negative <<- (negative[negative$token==fdict[i,"word"],]$n)/ fdict[i,]$total
+                           #print(positive[positive$token==fdict[i,"word"],])
+                           
                          }
                     },
                     # return prediction for a single message 
