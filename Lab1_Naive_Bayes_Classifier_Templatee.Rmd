@@ -151,7 +151,7 @@ test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 ```{r}
 # note the power functional features of R bring us! 
 tidy_text <- unnest_tokens(train, 'splitted', 'text', token="words") %>%
-             filter(!splitted %in% stop_words)
+             filter(!splitted %in% stop_words & nchar(splitted) > 2)
 tidy_text %>% count(splitted,sort=TRUE)
 ```
 
@@ -161,14 +161,14 @@ Below is bar plot for words, which are longer than 3 symbols and
 appeared more than 10 times in **negative** sentiment statements:
 
 ```{r}
-negative <- tidy_text %>% filter(sentiment=="negative") %>% count(splitted,sort=TRUE) %>% filter(n > 15) %>% filter(nchar(splitted) > 3)
+negative <- tidy_text %>% filter(sentiment=="negative") %>% count(splitted,sort=TRUE) %>% filter(n > 10) %>% filter(nchar(splitted) > 3)
 # sorting our dataframe
 negative <- mutate(negative, splitted = reorder(splitted, 1/n))
 # negative
 ggplot(negative, aes(splitted, n)) + geom_col()
 ```
 
-...and a similar plot for 3+-symbols-long words which appeared in
+...and a similar plot for 3+ symbols long words which appeared in
 **positive** sentiment statements more than 100 times (there is more
 positive statements, than negative, so the threshold of appearances is
 larger than for negative words)
@@ -185,7 +185,7 @@ ggplot(positive, aes(splitted, n)) +geom_col()
 
 ```{r}
 naiveBayes <- setRefClass("naiveBayes",
-       fields = c("fdict"),
+       fields = c("fdict", "total_prob_pos", "total_prob_neu", "total_prob_neg"),
        methods = list(
                     fit = function(X, y)
                     {
@@ -194,9 +194,9 @@ naiveBayes <- setRefClass("naiveBayes",
                          stop_words = gsub("[\r]", "", stop_words)
                          tidy_text <- unnest_tokens(df, 'token', 'text', token="words") %>% filter(!token %in% stop_words)
                          prob_sentiments <- count(tidy_text, sentiment)
-                         prob_neg = prob_sentiments[1,]$n/sum(prob_sentiments$n)
-                         prob_neu = prob_sentiments[2,]$n/sum(prob_sentiments$n)
-                         prob_pos = prob_sentiments[3,]$n/sum(prob_sentiments$n)
+                         total_prob_neg <<- prob_sentiments[1,]$n/sum(prob_sentiments$n)
+                         total_prob_neu <<- prob_sentiments[2,]$n/sum(prob_sentiments$n)
+                         total_prob_pos <<- prob_sentiments[3,]$n/sum(prob_sentiments$n)
                          
                          fdict <<- data.frame(
                            word = count(tidy_text, token, sort=TRUE)$token
@@ -214,7 +214,7 @@ naiveBayes <- setRefClass("naiveBayes",
                          fdict$prob_neu <<- seq(0,0, length=length(fdict$word))
                          fdict$prob_neg <<- seq(0,0, length=length(fdict$word))
 
-                         for(i in 1:40){
+                         for(i in 1:1000){
                            i_pos = positive[positive$token==fdict[i,"word"],]$n
                            i_neu = neutral[neutral$token==fdict[i,"word"],]$n
                            i_neg = negative[negative$token==fdict[i,"word"],]$n
@@ -232,23 +232,28 @@ naiveBayes <- setRefClass("naiveBayes",
                               i_neg = 0
                            }
                            
-                           fdict[i,]$prob_pos <<- (i_pos + 1) / (total_pos + total_all)
-                           fdict[i,]$prob_neu <<- (i_neu + 1) / (total_neu + total_all)
-                           fdict[i,]$prob_neg <<- (i_neg + 1) / (total_neg + total_all)
+                           fdict[i,"prob_pos"] <<- (i_pos + 1) / (total_pos + 3)
+                           fdict[i,"prob_neu"] <<- (i_neu + 1) / (total_neu + 3)
+                           fdict[i,"prob_neg"] <<- (i_neg + 1) / (total_neg + 3)
                          }    
                          
                     },
-                    # return prediction for a single message 
                     predict = function(message)
                     {
-                         # TODO
+                         tokens = read.table(text=message,col.names=c("word")) %>% filter(!word %in% stop_words)
+                         prob_pos = 1
+                         prob_neu = 1
+                         prob_neg = 1
+                         for (i in 1:nrow(tokens)) {
+                           if (length(fdict[fdict$word==tokens[i,"word"],]) > 0){
+                           prob_pos = prob_pos * fdict[fdict$word==tokens[i,"word"],]$prob_pos
+                           prob_neu = prob_neu * fdict[fdict$word==tokens[i,"word"],]$prob_neu
+                           prob_neg = prob_neg * fdict[fdict$word==tokens[i,"word"],]$prob_neg}
+                         }
+                         print(prob_pos*total_prob_pos)
+                         print(prob_neu*total_prob_neu)
+                         print(prob_neg*total_prob_neg)
                     },
-                    
-                    # score you test set so to get the understanding how well you model
-                    # works.
-                    # look at f1 score or precision and recall
-                    # visualize them 
-                    # try how well your model generalizes to real world data! 
                     score = function(X_test, y_test)
                     {
                          # TODO
@@ -262,6 +267,7 @@ test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 model = naiveBayes()
 model$fit(train$text, train$sentiment)
 model$fdict
+model$predict("The international electronic industry company Elcoteq has laid off tens of employees from its Tallinn facility ; contrary to earlier layoffs the company contracted the ranks of its office workers , the daily Postimees reported .")
 ```
 
 ## Measure effectiveness of your classifier
