@@ -220,6 +220,15 @@ test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 model = naiveBayes()
 model$fit(train$text, train$sentiment)
 model$fdict[(1:20),]
+ggplot(model$fdict, aes(x=word)) +
+  geom_point(aes(y=prob_pos, color="positive"), size=1.1) +
+  geom_point(aes(y=prob_neu, color="neutral"), size=1.1) +
+  geom_point(aes(y=prob_neg, color="negative"), size=1.1) +
+  labs(
+    title = "Probabilities of sentiment for each word in fdict",
+    x = "Words",
+    y = "Sentiment probability"
+  )
 model$predict("Cramo slipped to a pretax loss of EUR 6.7 million from a pretax profit of EUR 58.9 million .")
 #model$predict("According to Gran , the company has no plans to move all production to Russia , although that is where the company is growing .")
 model$score(test$text, test$sentiment)
