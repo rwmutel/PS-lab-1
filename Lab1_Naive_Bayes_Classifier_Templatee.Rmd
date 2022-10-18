@@ -294,7 +294,13 @@ model$score(test$text, test$sentiment)
 In this lab task, we used **Bayes' rule** as the main mathematical model
 of probability search and **bag of words** technique (ignore the order
 of words in a sentence and count only the frequency) to improve the
-accuracy of the similarity search algorithm.
+accuracy of the similarity search algorithm. To classify the sentences
+we calculated the **conditional probability** of each word given the
+text type, and then calculated the **product** of these probabilities
+for all known words in given sentence (as we assumed the words are
+independent, multiplying their probabilities will denote the probability
+of the whole sentence). Then we compared the probabilities and chose the
+largest one.
 
 In the main task, we developed 3 methods of the `naiveBayes` class:
 
@@ -307,12 +313,12 @@ In the main task, we developed 3 methods of the `naiveBayes` class:
 
 Naive Bayes is a good classifying method even despite it "naive" part
 where we make a strong **assumption**, that word order does not matter
-and we can use the **bag of words** technique. Its main pros are
-(usually) relatively good **accuracy** and high **speed**. Its con is
-that in specific cases word order and word combinations may be **more
-useful** than single word bag of words approach. Also, no model works
-well if it was trained on invalid data which does not illustrate real
-conditions.
+and the probability of each word in sentence is independent, which lets
+us use the **bag of words** technique. Its main pros are (usually)
+relatively good **accuracy** and high **speed**. Its con is that in
+specific cases word order and word combinations may be **more useful**
+than single word bag of words approach. Also, no model works well if it
+was trained on invalid data which does not illustrate real conditions.
 
 In our case, the accuracy is **low**. It would be larger if we were
 given **more diverse data**: in train.csv we have only **119** entries
