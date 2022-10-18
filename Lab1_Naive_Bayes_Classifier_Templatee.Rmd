@@ -289,22 +289,37 @@ model$predict("Cramo slipped to a pretax loss of EUR 6.7 million from a pretax p
 model$score(test$text, test$sentiment)
 ```
 
-"
+## Summary
 
-## Measure effectiveness of your classifier
+In this lab task, we used **Bayes' rule** as the main mathematical model
+of probability search and **bag of words** technique (ignore the order
+of words in a sentence and count only the frequency) to improve the
+accuracy of the similarity search algorithm.
 
--   Note that accuracy is not always a good metric for your classifier.
-    Look at precision and recall curves, F1 score metric.
--   Visualize them.
--   Show failure cases.
+In the main task, we developed 3 methods of the `naiveBayes` class:
 
-## Conclusions
+-   `fit` - determines the probability of each word belonging to a
+    specific "tag", creates frequency dictionary
+-   `predict` - using the formula described above, finds the probability
+    that the sentence is under one of the "tags".
+-   `score` -- tests the code and determines the accuracy of the
+    algorithm.
 
-Summarize your work by explaining in a few sentences the points listed
-below.
+Naive Bayes is a good classifying method even despite it "naive" part
+where we make a strong **assumption**, that word order does not matter
+and we can use the **bag of words** technique. Its main pros are
+(usually) relatively good **accuracy** and high **speed**. Its con is
+that in specific cases word order and word combinations may be **more
+useful** than single word bag of words approach. Also, no model works
+well if it was trained on invalid data which does not illustrate real
+conditions.
 
--   Describe the method implemented in general. Show what are
-    mathematical foundations you are basing your solution on.
--   List pros and cons of the method. This should include the
-    limitations of your method, all the assumption you make about the
-    nature of your data etc.
+In our case, the accuracy is **low**. It would be larger if we were
+given **more diverse data**: in train.csv we have only **119** entries
+of **negative** sentiment sentences among **4200** **total** examples,
+which causes conditional probability of words not fair: in the smaller
+datasets such as our negative sentences dataset there is more unique
+words which means it is harder to find class-specific words which makes
+classifying harder. **Larger portions** of data to train our model (for
+example whole article instead of just the headline) would also improve
+accuracy of the model.
