@@ -42,36 +42,12 @@ for more detailed explanations.
 
 ## Data description
 
-There are 5 datasets uploaded on the cms.
+**Sentiment: all the text messages contained in this data set are
+labeled with three sentiments: positive, neutral or negative. The task
+is to classify some text message as the one of positive mood, negative
+or neutral.**
 
-To determine your variant, take your team number from the list of teams
-on cms and take *mod 5* - this is the number of your data set.
-
--   0 - authors This data set consists of citations of three famous
-    writers: Edgar Alan Poe, Mary Wollstonecraft Shelley and HP
-    Lovecraft. The task with this data set is to classify a piece of
-    text with the author who was more likely to write it.
-
--   1 - discrimination This data set consists of tweets that have
-    discriminatory (sexism or racism) messages or of tweets that are of
-    neutral mood. The task is to determine whether a given tweet has
-    discriminatory mood or does not.
-
--   2 - fake news This data set contains data of American news: a
-    headline and an abstract of the article. Each piece of news is
-    classified as fake or credible. The task is to classify the news
-    from test.csv as credible or fake.
-
--   **3 - sentiment All the text messages contained in this data set are
-    labeled with three sentiments: positive, neutral or negative. The
-    task is to classify some text message as the one of positive mood,
-    negative or neutral.**
-
--   4 - spam This last data set contains SMS messages classified as spam
-    or non-spam (ham in the data set). The task is to determine whether
-    a given message is spam or non-spam.
-
-Each data set consists of two files: *train.csv* and *test.csv*. The
+The data set consists of two files: *train.csv* and *test.csv*. The
 first one you will need find the probabilities distributions for each of
 the features, while the second one is needed for checking how well your
 classifier works.
@@ -85,47 +61,7 @@ library(dplyr)
 library(ggplot2)
 ```
 
-## Instructions
-
--   The first step is data pre-processing, which includes removing
-    punctuation marks and stop words
-
--   represent each message as a bag-of-words
-
--   using the training set, calculate all the conditional probabilities
-    in formula (1)
-
--   use those to predict classes for messages in the test set
-
--   evaluate effectiveness of the classifier by calculating the
-    corresponding metrics
-
--   shortly summarize your work
-
--   do not forget to submit both the (compiled) Rmd source file and the
-    .html output
-
 ### Data pre-processing
-
--   Read the *.csv* data files.
--   Сlear your data from punctuation or other unneeded symbols.
--   Clear you data from stop words. You don't want words as is, and, or
-    etc. to affect your probabilities distributions, so it is a wise
-    decision to get rid of them. Find list of stop words in the cms
-    under the lab task.
--   Represent each test message as its bag-of-words. Here:
-    <https://machinelearningmastery.com/gentle-introduction-bag-words-model/>
-    you can find general introduction to the bag-of-words model and
-    examples on to create it.
--   It is highly recommended to get familiar with R dataframes, it would
-    make the work much easier to do.
--   Useful links:
-    -   <https://steviep42.github.io/webscraping/book/bagofwords.html#tidytext> -
-        example of using *tidytext* to count frequencies of the words.
-    -   Basics of Text Mining in R:
-        <http://rstudio-pubs-static.s3.amazonaws.com/256588_57b585da6c054349825cba46685d8464.html>
-        . Note that it also includes an example on how to create a bag
-        of words from your text document.
 
 ```{r}
 list.files(getwd())
