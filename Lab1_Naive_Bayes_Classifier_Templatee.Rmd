@@ -88,7 +88,7 @@ test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 # note the power functional features of R bring us! 
 tidy_text <- unnest_tokens(train, 'splitted', 'text', token="words") %>%
              filter(!splitted %in% stop_words & nchar(splitted) > 2)
-tidy_text %>% count(splitted,sort=TRUE)
+count(tidy_text, splitted,sort=TRUE)[(1:10),]
 ```
 
 ### Data Visualization
@@ -219,7 +219,7 @@ test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 
 model = naiveBayes()
 model$fit(train$text, train$sentiment)
-model$fdict
+model$fdict[(1:20),]
 model$predict("Cramo slipped to a pretax loss of EUR 6.7 million from a pretax profit of EUR 58.9 million .")
 #model$predict("According to Gran , the company has no plans to move all production to Russia , although that is where the company is growing .")
 model$score(test$text, test$sentiment)
