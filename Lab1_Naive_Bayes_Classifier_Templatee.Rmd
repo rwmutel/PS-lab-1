@@ -236,22 +236,20 @@ naiveBayes <- setRefClass("naiveBayes",
                            fdict[i,"prob_neu"] <<- (i_neu + 1) / (total_neu + total_all)
                            fdict[i,"prob_neg"] <<- (i_neg + 1) / (total_neg + total_all)
                          }
-                         fdict$prob_pos <<- fdict$prob_pos / total_prob_pos
-                         fdict$prob_neu <<- fdict$prob_neu / total_prob_neu
-                         fdict$prob_neg <<- fdict$prob_neg / total_prob_neg
                     },
                     predict = function(message)
                     {
-                         tokens <- read.table(text=message,col.names=c("word")) %>% filter(!word %in% stop_words & word %in% fdict$word)
-                         print(tokens)
+                         tokens = data.frame(
+                           word = unlist(strsplit(message, split=" "))
+                         )
+                         tokens <-  filter(tokens, !word %in% stop_words & word %in% fdict$word)
                          filtered_fdict <- filter(fdict, word %in% tokens$word)
-                         print(filtered_fdict)
                          prob_pos <- prod(filtered_fdict$prob_pos) * total_prob_pos
                          prob_neu <- prod(filtered_fdict$prob_neu) * total_prob_neu
                          prob_neg <- prod(filtered_fdict$prob_neg) * total_prob_neg
-                         print(prob_pos)
-                         print(prob_neu)
-                         print(prob_neg)
+                         #print(prob_pos)
+                         #print(prob_neu)
+                         #print(prob_neg)
                          if (prob_pos > prob_neu & prob_pos > prob_neg){
                            return("positive")
                          }
@@ -265,7 +263,17 @@ naiveBayes <- setRefClass("naiveBayes",
                     },
                     score = function(X_test, y_test)
                     {
-                         # TODO
+                         df <- data.frame(X_test,y_test)
+                         df$prediction = seq(0,0,length=nrow(df))
+                         counter = 0
+                         for(i in (1:nrow(df))){
+                           df[i,"prediction"] = .self$predict(df[i,"X_test"])
+                           if(df[i,"prediction"] == df[i,"y_test"]){
+                             counter = counter + 1
+                           }
+                         }
+                         #print(df)
+                         return(counter/nrow(df))
                     }
 ))
 test_path <- "3-sentiment/test.csv"
@@ -277,7 +285,8 @@ model = naiveBayes()
 model$fit(train$text, train$sentiment)
 model$fdict
 model$predict("Cramo slipped to a pretax loss of EUR 6.7 million from a pretax profit of EUR 58.9 million .")
-model$predict("According to Gran , the company has no plans to move all production to Russia , although that is where the company is growing .")
+#model$predict("According to Gran , the company has no plans to move all production to Russia , although that is where the company is growing .")
+model$score(test$text, test$sentiment)
 ```
 
 "
