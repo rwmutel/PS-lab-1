@@ -185,22 +185,23 @@ naiveBayes <- setRefClass("naiveBayes",
                          prob_lovecraft <- prod(filtered_fdict$prob_lovecraft) * total_prob_lovecraft
                          prob_shelley <- prod(filtered_fdict$prob_shelley) * total_prob_shelley
                          prob_poe <- prod(filtered_fdict$prob_poe) * total_prob_poe
-                         print("Probability for message:")
-                         print(message)
-                         print("P(Lovecraft|message):")
-                         print(prob_lovecraft)
-                         print("P(Shelley|message):")
-                         print(prob_shelley)
-                         print("P(Poe|message):")
-                         print(prob_poe)
-                         if (prob_lovecraft > prob_poe & prob_lovecraft > prob_shelley){
+                         # print("Probability for message:")
+                         # print(message)
+                         # print("P(Lovecraft|message):")
+                         # print(prob_lovecraft)
+                         # print("P(Shelley|message):")
+                         # print(prob_shelley)
+                         # print("P(Poe|message):")
+                         # print(prob_poe)
+                         highest = max(prob_lovecraft, prob_poe, prob_poe)
+                         if (prob_lovecraft == highest){
                            return("HP Lovecraft")
                          }
-                         else if(prob_lovecraft > prob_shelley){
+                         else if(prob_poe == highest){
                            return("Edgar Alan Poe")
                          }
                          else{
-                           return("Mary Wollstonecraft Shelley")
+                           return("Mary Wollstonecraft Shelley ")
                          }
 
                     },
@@ -229,7 +230,7 @@ model$fit(train$text, train$author)
 model$fdict[(1:20),]
 model$predict("My mother's tender caresses and my father's smile of benevolent pleasure while regarding me are my first recollections.")
 print("Overall score:")
-model$score(test$text, test$author)
+model$score(test[(1:1000),]$text, test[(1:1000),]$author)
 ```
 
 ## Summary
