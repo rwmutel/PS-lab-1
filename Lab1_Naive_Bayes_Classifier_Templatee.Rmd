@@ -142,7 +142,6 @@ naiveBayes <- setRefClass("naiveBayes",
                          lovecraft <- tidy_text %>% filter(author=="HP Lovecraft")  %>% count(token, sort=TRUE)
                          total_lovecraft = nrow(lovecraft)
                          shelley <- tidy_text %>% filter(author=="Mary Wollstonecraft Shelley ") %>% count(token, sort=TRUE)
-                         print(shelley)
                          total_shelley = nrow(shelley)
                          poe <- tidy_text %>% filter(author=="Edgar Alan Poe")  %>% count(token, sort=TRUE)
                          total_poe = nrow(poe)
@@ -193,11 +192,10 @@ naiveBayes <- setRefClass("naiveBayes",
                          # print(prob_shelley)
                          # print("P(Poe|message):")
                          # print(prob_poe)
-                         highest = max(prob_lovecraft, prob_poe, prob_poe)
-                         if (prob_lovecraft == highest){
+                         if (prob_lovecraft > prob_shelley && prob_lovecraft > prob_poe){
                            return("HP Lovecraft")
                          }
-                         else if(prob_poe == highest){
+                         else if(prob_poe > prob_shelley){
                            return("Edgar Alan Poe")
                          }
                          else{
@@ -216,7 +214,7 @@ naiveBayes <- setRefClass("naiveBayes",
                              counter = counter + 1
                            }
                          }
-                         #print(df)
+                         print(df[(1:20),c("X_test", "prediction", "y_test")])
                          return(counter/nrow(df))
                     }
 ))
@@ -230,7 +228,7 @@ model$fit(train$text, train$author)
 model$fdict[(1:20),]
 model$predict("My mother's tender caresses and my father's smile of benevolent pleasure while regarding me are my first recollections.")
 print("Overall score:")
-model$score(test[(1:1000),]$text, test[(1:1000),]$author)
+model$score(test$text, test$author)
 ```
 
 ## Summary
