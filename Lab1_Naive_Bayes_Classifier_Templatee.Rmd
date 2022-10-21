@@ -117,60 +117,62 @@ positive <- mutate(positive, splitted = reorder(splitted, 1/n))
 ggplot(positive, aes(splitted, n)) +geom_col()
 ```
 
-## Classifier implementation
+## Classifier implementation (Authors Dataset Version)
 
 ```{r}
 naiveBayes <- setRefClass("naiveBayes",
-       fields = c("fdict", "total_prob_pos", "total_prob_neu", "total_prob_neg"),
+       fields = c("fdict", "total_prob_lovecraft", "total_prob_shelley", "total_prob_poe"),
        methods = list(
                     fit = function(X, y)
                     {
-                         df <- data.frame(text=X,sentiment=y)
+                         df <- data.frame(text=X,author=y)
                          stop_words <- strsplit(read_file("stop_words.txt"), split='\n')[[1]]
                          stop_words = gsub("[\r]", "", stop_words)
                          tidy_text <- unnest_tokens(df, 'token', 'text', token="words") %>% filter(!token %in% stop_words)
-                         prob_sentiments <- count(tidy_text, sentiment)
-                         total_prob_neg <<- prob_sentiments[1,"n"]/sum(prob_sentiments$n)
-                         total_prob_neu <<- prob_sentiments[2,"n"]/sum(prob_sentiments$n)
-                         total_prob_pos <<- prob_sentiments[3,"n"]/sum(prob_sentiments$n)
+                         #print(tidy_text[(1:20),])
+                         prob_authors <- count(tidy_text, author)
+                         total_prob_poe <<- prob_authors[1,"n"]/sum(prob_authors$n)
+                         total_prob_shelley <<- prob_authors[3,"n"]/sum(prob_authors$n)
+                         total_prob_lovecraft <<- prob_authors[2,"n"]/sum(prob_authors$n)
 
                          fdict <<- data.frame(
                            word = count(tidy_text, token, sort=TRUE)$token
                            #total = count(tidy_text, token, sort=TRUE)$n
                          )
-                         positive <- tidy_text %>% filter(sentiment=="positive")  %>% count(token, sort=TRUE)
-                         total_pos = nrow(positive)
-                         neutral <- tidy_text %>% filter(sentiment=="neutral") %>% count(token, sort=TRUE)
-                         total_neu = nrow(neutral)
-                         negative <- tidy_text %>% filter(sentiment=="negative")  %>% count(token, sort=TRUE)
-                         total_neg = nrow(negative)
+                         lovecraft <- tidy_text %>% filter(author=="HP Lovecraft")  %>% count(token, sort=TRUE)
+                         total_lovecraft = nrow(lovecraft)
+                         shelley <- tidy_text %>% filter(author=="Mary Wollstonecraft Shelley ") %>% count(token, sort=TRUE)
+                         print(shelley)
+                         total_shelley = nrow(shelley)
+                         poe <- tidy_text %>% filter(author=="Edgar Alan Poe")  %>% count(token, sort=TRUE)
+                         total_poe = nrow(poe)
                          total_all = n_distinct(tidy_text$token)
 
-                         fdict$prob_pos <<- seq(0,0, length=length(fdict$word))
-                         fdict$prob_neu <<- seq(0,0, length=length(fdict$word))
-                         fdict$prob_neg <<- seq(0,0, length=length(fdict$word))
+                         fdict$prob_lovecraft <<- seq(0,0, length=length(fdict$word))
+                         fdict$prob_shelley <<- seq(0,0, length=length(fdict$word))
+                         fdict$prob_poe <<- seq(0,0, length=length(fdict$word))
 
                          for(i in 1:nrow(fdict)){
-                           i_pos = positive[positive$token==fdict[i,"word"],]$n
-                           i_neu = neutral[neutral$token==fdict[i,"word"],]$n
-                           i_neg = negative[negative$token==fdict[i,"word"],]$n
+                           i_lovecraft = lovecraft[lovecraft$token==fdict[i,"word"],]$n
+                           i_shelley = shelley[shelley$token==fdict[i,"word"],]$n
+                           i_poe = poe[poe$token==fdict[i,"word"],]$n
 
-                           if (length(i_pos) == 0){
-                              i_pos <- integer(1)
-                              i_pos = 0
+                           if (length(i_lovecraft) == 0){
+                              i_lovecraft <- integer(1)
+                              i_lovecraft = 0
                            }
-                           if (length(i_neu) == 0){
-                              i_neu <- integer(1)
-                              i_neu = 0
+                           if (length(i_shelley) == 0){
+                              i_shelley <- integer(1)
+                              i_shelley = 0
                            }
-                           if (length(i_neg) == 0){
-                              i_neg <- integer(1)
-                              i_neg = 0
+                           if (length(i_poe) == 0){
+                              i_poe <- integer(1)
+                              i_poe = 0
                            }
                            
-                           fdict[i,"prob_pos"] <<- (i_pos + 1) / (total_pos + total_all)
-                           fdict[i,"prob_neu"] <<- (i_neu + 1) / (total_neu + total_all)
-                           fdict[i,"prob_neg"] <<- (i_neg + 1) / (total_neg + total_all)
+                           fdict[i,"prob_lovecraft"] <<- (i_lovecraft + 1) / (total_lovecraft + total_all)
+                           fdict[i,"prob_shelley"] <<- (i_shelley + 1) / (total_shelley + total_all)
+                           fdict[i,"prob_poe"] <<- (i_poe + 1) / (total_poe + total_all)
                          }
                     },
                     predict = function(message)
@@ -180,20 +182,25 @@ naiveBayes <- setRefClass("naiveBayes",
                          )
                          tokens <-  filter(tokens, !word %in% stop_words & word %in% fdict$word)
                          filtered_fdict <- filter(fdict, word %in% tokens$word)
-                         prob_pos <- prod(filtered_fdict$prob_pos) * total_prob_pos
-                         prob_neu <- prod(filtered_fdict$prob_neu) * total_prob_neu
-                         prob_neg <- prod(filtered_fdict$prob_neg) * total_prob_neg
-                         #print(prob_pos)
-                         #print(prob_neu)
-                         #print(prob_neg)
-                         if (prob_pos > prob_neu & prob_pos > prob_neg){
-                           return("positive")
+                         prob_lovecraft <- prod(filtered_fdict$prob_lovecraft) * total_prob_lovecraft
+                         prob_shelley <- prod(filtered_fdict$prob_shelley) * total_prob_shelley
+                         prob_poe <- prod(filtered_fdict$prob_poe) * total_prob_poe
+                         print("Probability for message:")
+                         print(message)
+                         print("P(Lovecraft|message):")
+                         print(prob_lovecraft)
+                         print("P(Shelley|message):")
+                         print(prob_shelley)
+                         print("P(Poe|message):")
+                         print(prob_poe)
+                         if (prob_lovecraft > prob_poe & prob_lovecraft > prob_shelley){
+                           return("HP Lovecraft")
                          }
-                         else if(prob_pos > prob_neg){
-                           return("neutral")
+                         else if(prob_lovecraft > prob_shelley){
+                           return("Edgar Alan Poe")
                          }
                          else{
-                           return("negative")
+                           return("Mary Wollstonecraft Shelley")
                          }
 
                     },
@@ -212,26 +219,17 @@ naiveBayes <- setRefClass("naiveBayes",
                          return(counter/nrow(df))
                     }
 ))
-test_path <- "3-sentiment/test.csv"
-train_path <- "3-sentiment/train.csv"
+test_path <- "0-authors/test.csv"
+train_path <- "0-authors/train.csv"
 train <- read.csv(file = train_path, stringsAsFactors = FALSE)
 test <- read.csv(file = test_path, stringsAsFactors = FALSE)
 
 model = naiveBayes()
-model$fit(train$text, train$sentiment)
+model$fit(train$text, train$author)
 model$fdict[(1:20),]
-ggplot(model$fdict, aes(x=word)) +
-  geom_point(aes(y=prob_pos, color="positive"), size=1.1) +
-  geom_point(aes(y=prob_neu, color="neutral"), size=1.1) +
-  geom_point(aes(y=prob_neg, color="negative"), size=1.1) +
-  labs(
-    title = "Probabilities of sentiment for each word in fdict",
-    x = "Words",
-    y = "Sentiment probability"
-  )
-model$predict("Cramo slipped to a pretax loss of EUR 6.7 million from a pretax profit of EUR 58.9 million .")
-#model$predict("According to Gran , the company has no plans to move all production to Russia , although that is where the company is growing .")
-model$score(test$text, test$sentiment)
+model$predict("My mother's tender caresses and my father's smile of benevolent pleasure while regarding me are my first recollections.")
+print("Overall score:")
+model$score(test$text, test$author)
 ```
 
 ## Summary
